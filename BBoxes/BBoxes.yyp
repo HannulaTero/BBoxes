@@ -40,7 +40,7 @@
     {"id":{"name":"BBoxesZDecodeX","path":"scripts/BBoxesZDecodeX/BBoxesZDecodeX.yy",},},
     {"id":{"name":"BBoxesZDecodeY","path":"scripts/BBoxesZDecodeY/BBoxesZDecodeY.yy",},},
     {"id":{"name":"BBoxesZEncode","path":"scripts/BBoxesZEncode/BBoxesZEncode.yy",},},
-    {"id":{"name":"BBoxesZResolution","path":"scripts/BBoxesZResolution/BBoxesZResolution.yy",},},
+    {"id":{"name":"shaderBBoxesClear","path":"shaders/shaderBBoxesClear/shaderBBoxesClear.yy",},},
     {"id":{"name":"shaderBBoxesInit","path":"shaders/shaderBBoxesInit/shaderBBoxesInit.yy",},},
     {"id":{"name":"shaderBBoxesPass","path":"shaders/shaderBBoxesPass/shaderBBoxesPass.yy",},},
     {"id":{"name":"spriteBBoxes1x1","path":"sprites/spriteBBoxes1x1/spriteBBoxes1x1.yy",},},

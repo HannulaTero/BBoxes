@@ -7,5 +7,5 @@
 */ 
 function BBoxesBitLength(_value)
 {
-  return floor(log2(_value)) + 1;
+  return ceil(log2(_value + 1));
 }

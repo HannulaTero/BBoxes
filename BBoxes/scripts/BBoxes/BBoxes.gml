@@ -226,25 +226,28 @@ function BBoxes( _label=undefined) constructor
       _request.mortonZ = _index;
       _request.mortonX = BBoxesZDecodeX(_index);
       _request.mortonY = BBoxesZDecodeY(_index);
-      _request.mortonRes = BBoxesZResolution(_index);
     });
     
     
     // Precompute the largest surface size required.
     // The sources are added and surface shrunk alternatvely, so can't directly know.
     // The item inserting follows Z-curve (morton code).
-    var _maxSize = 1;
+    var _maxW = 1;
+    var _maxH = 1;
     for(var i = 0; i < _requestCount; i++)
     {
       var _request = _requests[i];
-      _maxSize = max(_maxSize, _request.mortonRes * _request.size);
+      _maxW = max(_maxW, (_request.mortonX + 1) * _request.size);
+      _maxH = max(_maxH, (_request.mortonY + 1) * _request.size);
     }
+    _maxW = BBoxesNextPoT(_maxW);
+    _maxH = BBoxesNextPoT(_maxH);
     
     
     // Prepare the surfaces.
     // Surfaces are being cleared while items are inserted.
-    var _surfSrc = surface_create(_maxSize, _maxSize, _format);
-    var _surfDst = surface_create(_maxSize, _maxSize, _format);
+    var _surfSrc = surface_create(_maxW, _maxH, _format);
+    var _surfDst = surface_create(_maxW, _maxH, _format);
     var _surfTmp = undefined;
     
     
@@ -277,6 +280,7 @@ function BBoxes( _label=undefined) constructor
       // also we are reusing surfaces.
       surface_set_target(_surfSrc);
       {
+        shader_set(shaderBBoxesClear);
         for(var i = _tail; i < _head; i++)
         {
           var _request = _requests[i];
@@ -285,6 +289,7 @@ function BBoxes( _label=undefined) constructor
           var _y = _request.mortonY * _size;
           draw_sprite_stretched(spriteBBoxes1x1, 0, _x, _y, _size, _size);
         }
+        shader_reset();
       }
       surface_reset_target();
       
@@ -296,6 +301,8 @@ function BBoxes( _label=undefined) constructor
         var _shader = shaderBBoxesInit;
         var _FSH_threshold = shader_get_uniform(_shader, "FSH_threshold");
         var _FSH_offset = shader_get_uniform(_shader, "FSH_offset");
+        _maxW = 1;
+        _maxH = 1;
         
         // Apply the shader.
         // The minmax is calculated from output position, so offset is required.
@@ -304,20 +311,28 @@ function BBoxes( _label=undefined) constructor
         for(var i = _tail; i < _head; i++)
         {
           var _request = _requests[i];
-          var _size = _request.size;
-          var _x = _request.mortonX * _size;
-          var _y = _request.mortonY * _size;
-          shader_set_uniform_f(_FSH_offset, _x, _y);
-          _request.Draw(_x, _y);
+          
+          // Get the position.
+          var _x = _request.mortonX * _request.size;
+          var _y = _request.mortonY * _request.size;
+          
+          // Get the size.
+          _maxW = max(_maxW, _x + _request.size);
+          _maxH = max(_maxH, _y + _request.size);
+          
+          // Whether try drawing at all.
+          if (_request.status != "failed")
+          {
+            shader_set_uniform_f(_FSH_offset, _x, _y);
+            _request.Draw(_x, _y);
+          }
         }
         shader_reset();
       }
       surface_reset_target();
       
-      
       // Reduce the source by 2x2 blocks.
       // This is repeated as many times until meet next request size.
-      var _tailRes = _requests[_tail].mortonRes;
       var _headSize = (_head < _requestCount) ? (_requests[_head].size) : 1;
       while(_tailSize > _headSize)
       {
@@ -329,13 +344,14 @@ function BBoxes( _label=undefined) constructor
           var _FSH_baseTexels = shader_get_uniform(_shader, "FSH_baseTexels");
           var _texture = surface_get_texture(_surfSrc);
           var _texelW = texture_get_texel_width(_texture);
-          var _texelH = texture_get_texel_width(_texture);
-          var _size = _tailRes * _tailSize;
+          var _texelH = texture_get_texel_height(_texture);
+          _maxW = _maxW >> 1;
+          _maxH = _maxH >> 1;
         
           // Apply the shader.
           shader_set(_shader);
           shader_set_uniform_f(_FSH_baseTexels, _texelW, _texelH);
-          draw_surface_stretched(_surfSrc, 0, 0, _size, _size);
+          draw_surface_stretched(_surfSrc, 0, 0, _maxW, _maxH);
           shader_reset();
         }
         surface_reset_target();
@@ -356,17 +372,16 @@ function BBoxes( _label=undefined) constructor
     
     // Copy final items to a smaller surface for the readback.
     // Z-curve has specific area, which needs to be accomodated. 
-    var _finalRes = BBoxesZResolution(_requestCount);
-    var _surfReadback = surface_create(_finalRes, _finalRes, _format);
+    var _surfReadback = surface_create(_maxW, _maxH, _format);
     surface_set_target(_surfReadback);
-    draw_surface_part(_surfSrc, 0, 0, _finalRes, _finalRes, 0, 0);
+    draw_surface_part(_surfSrc, 0, 0, _maxW, _maxH, 0, 0);
     surface_reset_target();
     surface_free(_surfSrc);
     surface_free(_surfDst);
     
     
     // Do the readback.
-    var _dtype = buffer_f32;
+    var _dtype = (_format == surface_rgba16float) ? buffer_f16 : buffer_f32;
     var _dsize = buffer_sizeof(_dtype);
     var _bytes = _dsize * 4 * _requestCount;
     var _buffer = buffer_create(_bytes, buffer_grow, 1);
@@ -378,20 +393,22 @@ function BBoxes( _label=undefined) constructor
     // So have to change row-major index into Z-curve index.
     for(var i = 0; i < _requestCount; i++)
     {
+      // Get the request.
+      var _request = _requests[i];
+      
+      // Get the actual request index.
+      var _x = BBoxesZDecodeX(i);
+      var _y = BBoxesZDecodeY(i);
+      var _index = _x + _y * _maxW;
+      
       // Read the result.
-      buffer_seek(_buffer, buffer_seek_start, i * _dsize * 4);
+      buffer_seek(_buffer, buffer_seek_start, _index * _dsize * 4);
       var _xmin = buffer_read(_buffer, _dtype);
       var _ymin = buffer_read(_buffer, _dtype);
       var _xmax = buffer_read(_buffer, _dtype);
       var _ymax = buffer_read(_buffer, _dtype);
       
-      // Get the actual request index.
-      var _x = i mod _finalRes;
-      var _y = i mod _finalRes;
-      var _index = BBoxesZEncode(_x, _y);
-      
       // Set the result.
-      var _request = _requests[i];
       _request.xmin = _xmin;
       _request.ymin = _ymin;
       _request.xmax = _xmax;

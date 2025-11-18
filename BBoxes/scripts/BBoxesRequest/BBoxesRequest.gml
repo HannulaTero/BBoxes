@@ -22,7 +22,6 @@ function BBoxesRequest(_data, _meta=undefined, _Callback=undefined) constructor
   self.mortonZ = -1; // The Z-curve index.
   self.mortonX = -1; // Grid 2D x-position.
   self.mortonY = -1; // Grid 2D y-position.
-  self.mortonRes = -1; // Resolution, size required for Z-curve.
   
   
   // The type-related data.
