@@ -47,6 +47,7 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
     var _request = new BBoxesRequestImage();
     _request.SetSprite(_spr, _img);
     _request.SetCallback(_Callback);
+    _request.SetOffset();
     array_push(self.requests, _request);
     return _request;
   };
@@ -362,10 +363,7 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
       var _ymax = buffer_read(_buffer, _dtype);
       
       // Set the result.
-      _request.xmin = _xmin;
-      _request.ymin = _ymin;
-      _request.xmax = _xmax;
-      _request.ymax = _ymax;
+      _request.SetBBox(_xmin, _ymin, _xmax, _ymax);
     }
     buffer_delete(_buffer);
     

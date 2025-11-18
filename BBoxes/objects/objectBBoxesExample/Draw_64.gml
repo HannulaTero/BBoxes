@@ -70,14 +70,9 @@ if (_count > 0)
     draw_sprite(_request.sprite, _request.image, _x, _y);
 
     // Draw the bounding box. 
-    // -> BBox for now is relative to the images top-left corner.
-    var _xoffset = sprite_get_xoffset(_request.sprite);
-    var _yoffset = sprite_get_yoffset(_request.sprite);
     draw_rectangle(
-      _x + _request.xmin - _xoffset,
-      _y + _request.ymin - _yoffset,
-      _x + _request.xmax - _xoffset,
-      _y + _request.ymax - _yoffset,
+      _x + _request.xmin, _y + _request.ymin,
+      _x + _request.xmax, _y + _request.ymax,
       true
     );
   }
@@ -87,10 +82,8 @@ if (_count > 0)
   if (is_instanceof(_request, BBoxesRequestSurface) == true)
   {
     draw_rectangle(
-      _request.xmin,
-      _request.ymin,
-      _request.xmax,
-      _request.ymax,
+      _request.xmin, _request.ymin,
+      _request.xmax, _request.ymax,
       true
     );
   }

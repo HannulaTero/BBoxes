@@ -30,6 +30,11 @@ function BBoxesRequest() : BBoxesCommon() constructor
   self.Callback = undefined;
   
   
+  // The origin, in sprite offset for example.
+  self.xorigin = 0;
+  self.yorigin = 0;
+  
+  
   // Bounding box, the request result.
   self.xmin = -1;
   self.ymin = -1;
@@ -98,6 +103,26 @@ function BBoxesRequest() : BBoxesCommon() constructor
   
   
   /**
+  * Set the bounding box, called from Submit.
+  * This will apply origin applied to given values.
+  *
+  * @param {Real} _xmin
+  * @param {Real} _ymin
+  * @param {Real} _xmax
+  * @param {Real} _ymax
+  */ 
+  static SetBBox = function(_xmin, _ymin, _xmax, _ymax)
+  {
+    self.xmin = _xmin - self.xorigin;
+    self.ymin = _ymin - self.yorigin;
+    self.xmax = _xmax - self.xorigin;
+    self.ymax = _ymax - self.yorigin;
+    return self;
+  };
+  
+  
+  
+  /**
   * Assign the callback, which is called when request finishes / fails.
   * The function signature should be same as DefaultCallback.
   * 
@@ -106,6 +131,21 @@ function BBoxesRequest() : BBoxesCommon() constructor
   static SetCallback = function(_callback)
   {
     self.Callback = _callback;
+    return self;
+  };
+  
+  
+  
+  /**
+  * Set the item origin, like sprite offset. 
+  *
+  * @param {Real} _xorigin
+  * @param {Real} _yorigin
+  */ 
+  static SetOrigin = function(_xorigin, _yorigin)
+  {
+    self.xorigin = _xorigin;
+    self.yorigin = _yorigin;
     return self;
   };
   

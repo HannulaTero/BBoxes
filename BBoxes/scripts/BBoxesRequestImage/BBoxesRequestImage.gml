@@ -57,6 +57,18 @@ function BBoxesRequestImage(_label=undefined) : BBoxesRequest() constructor
   
   
   /**
+  * Set origin to be the sprite offset..
+  */ 
+  static SetOffset = function(_sprite=self.sprite)
+  {
+    self.xorigin = sprite_get_xoffset(_sprite);
+    self.yorigin = sprite_get_yoffset(_sprite);
+    return self;
+  };
+  
+  
+  
+  /**
   * Assigns the sprite and image, and updates the PoT -size.
   * 
   * @param {Asset.GMSprite} _sprite
