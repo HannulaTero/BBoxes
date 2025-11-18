@@ -5,8 +5,8 @@
   "isDnD":false,
   "name":"BBoxesRequestSurface",
   "parent":{
-    "name":"BBoxes",
-    "path":"BBoxes.yyp",
+    "name":"Requests",
+    "path":"folders/BBoxes/Requests.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",
