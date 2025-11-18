@@ -9,12 +9,11 @@
 * -> Collects requests as references, the situation is taken at "Submit".
 * -> So mind this when checking bbox for surfaces, which may change.
 * 
-* @param {String} _label    For identifying the BBox.
+* @param {String} _label For identifying purposes.
 */
-function BBoxes( _label=undefined) constructor
+function BBoxes( _label=undefined) : BBoxesCommon() constructor
 {
-  // Used for identification purposes.
-  self.label = undefined;
+  // Define the label.
   self.SetLabel(_label);
   
   
@@ -27,21 +26,12 @@ function BBoxes( _label=undefined) constructor
   * Add new item as pending request.
   * This tries to resolve what type automatically is.
   *
-  * @param {Any} _data
-  * @param {Any} _meta
-  * @param {Function} _Callback
+  * @param {Struct.BBoxesRequest} _request Any of acceptable request types.
   */ 
-  static Add = function(_data, _meta=undefined, _Callback=undefined)
+  static Add = function(_request)
   {
-    if (sprite_exists(_data) == true)
-    {
-      return self.AddImage(_data, _meta, _Callback);
-    }
-    if (surface_exists(_data) == true)
-    {
-      return self.AddSurface(_data, _Callback);
-    }
-    return self.AddInvalid(_Callback);
+    array_push(self.requests, _request);
+    return _request;
   };
   
   
@@ -103,42 +93,6 @@ function BBoxes( _label=undefined) constructor
   };
   
   
-  
-  /**
-  * Creates a new label.
-  * 
-  * @param {String} _label
-  */
-  static CreateLabel = function()
-  {
-    static counter = 0;
-    return $"{instanceof(self)}.{counter++}";
-  };
-  
-  
-  
-  /**
-  * Get current label.
-  */
-  static GetLabel = function()
-  {
-    return self.label;
-  };
-  
-  
-  
-  /**
-  * 
-  * @param {String} _label
-  */
-  static SetLabel = function(_label=self.CreateLabel())
-  {
-    self.label = _label;
-    return self;
-  };
-  
-  
-  
   /**
   * Submits current requests.
   * Has to be called in Draw-event!
@@ -165,7 +119,7 @@ function BBoxes( _label=undefined) constructor
       if (is_instanceof(_request, BBoxesRequestSurface))
       && (surface_exists(_request.data) == false)
       {
-        _request.status = "failed";
+        _request.status = BBoxesRequestStatus.FAILURE;
         _request.size = -1;
       }
     });
@@ -196,7 +150,7 @@ function BBoxes( _label=undefined) constructor
       {
         if (_request.size > 2048)
         {
-          _request.status = "failed";
+          _request.status = BBoxesRequestStatus.FAILURE;
           _request.size = -1;
         }
       });
@@ -321,7 +275,7 @@ function BBoxes( _label=undefined) constructor
           _maxH = max(_maxH, _y + _request.size);
           
           // Whether try drawing at all.
-          if (_request.status != "failed")
+          if (_request.status != BBoxesRequestStatus.FAILURE)
           {
             shader_set_uniform_f(_FSH_offset, _x, _y);
             _request.Draw(_x, _y);
@@ -437,9 +391,17 @@ function BBoxes( _label=undefined) constructor
     });
     
     
+    // Change status to reflect success.
     // Do the callbacks, if the request has one.
     array_foreach(_requests, function(_request, index)
     {
+      // Don't change if failed beforehand.
+      if (_request.status == BBoxesRequestStatus.PENDING)
+      {
+        _request.status = BBoxesRequestStatus.SUCCESS;
+      }
+      
+      // Do the callback.
       if (_request.Callback != undefined)
       {
         _request.Callback(_request);
@@ -458,16 +420,6 @@ function BBoxes( _label=undefined) constructor
     self.Clear();
     BBoxesGPUEnd();
     return _result;
-  };
-  
-  
-  
-  /**
-  * When BBoxes is printed etc. just give the label.
-  */ 
-  static toString = function()
-  {
-    return self.GetLabel();
   };
 }
 

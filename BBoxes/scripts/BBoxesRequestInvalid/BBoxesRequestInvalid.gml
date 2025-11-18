@@ -1,11 +1,12 @@
 
 
 /**
+* For invalid requests, non-supported ones.
 * 
-* 
-* @param {Function}   _Callback
+* @param {String} _label For identifying purposes.
 */ 
-function BBoxesRequestInvalid(_Callback=undefined) : BBoxesRequest(undefined, undefined, _Callback) constructor
+function BBoxesRequestInvalid(_label=undefined) : BBoxesRequest() constructor
 {
-  // Handle as the last items, so sorting key is -1.
+  // Define the label.
+  self.SetLabel(_label);
 }

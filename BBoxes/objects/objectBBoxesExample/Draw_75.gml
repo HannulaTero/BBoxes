@@ -8,7 +8,7 @@ if (keyboard_check_pressed(vk_delete) == true)
 
 
 // SPRITE EXAMPLE.
-if (keyboard_check_pressed(ord("1")) == true)
+if (keyboard_check_pressed(ord("Q")) == true)
 {
   // Clear the results.
   array_resize(self.results, 0);
@@ -46,7 +46,7 @@ if (keyboard_check_pressed(ord("1")) == true)
 
 
 // SURFACE EXAMPLE.
-if (keyboard_check_pressed(ord("2")) == true)
+if (keyboard_check_pressed(ord("W")) == true)
 && (surface_exists(self.surface) == true)
 {
   // Clear the results.
