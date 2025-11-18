@@ -380,10 +380,23 @@ function BBoxes( _label=undefined) constructor
     surface_free(_surfDst);
     
     
+    // Get datatype and size.
+    // In HTML5, reading indirectly size of buffer_f16 is bugged.
+    // It works only if used directly 'buffer_sizeof(buffer_f16)' because of compile-time optimization.
+    var _dtype, _dsize;
+    if (_format == surface_rgba16float)
+    {
+      _dtype = buffer_f16;
+      _dsize = buffer_sizeof(buffer_f16);
+    }
+    else
+    {
+      _dtype = buffer_f32;
+      _dsize = buffer_sizeof(buffer_f32);
+    }
+    
     // Do the readback.
-    var _dtype = (_format == surface_rgba16float) ? buffer_f16 : buffer_f32;
-    var _dsize = buffer_sizeof(_dtype);
-    var _bytes = _dsize * 4 * _requestCount;
+    var _bytes = _dsize * 4 * _maxW * _maxH;
     var _buffer = buffer_create(_bytes, buffer_grow, 1);
     buffer_get_surface(_buffer, _surfReadback, 0);
     surface_free(_surfReadback);
