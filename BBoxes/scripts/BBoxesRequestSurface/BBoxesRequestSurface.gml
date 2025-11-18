@@ -6,7 +6,7 @@
 * @param {Id.Surface} _surface
 * @param {Function}   _Callback
 */ 
-function BBoxesRequestSurface(_surface, _Callback=undefined) : BBoxesRequest(_surface, _Callback) constructor
+function BBoxesRequestSurface(_surface, _Callback=undefined) : BBoxesRequest(_surface, undefined, _Callback) constructor
 {
   // Calculate the sorting key.
   var _w = surface_get_width(_surface);

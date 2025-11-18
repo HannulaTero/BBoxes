@@ -1,6 +1,14 @@
 /// @desc APPLY BBOXES.
 
-if (keyboard_check_pressed(vk_space) == true)
+// CLEAR EXAMPLES.
+if (keyboard_check_pressed(vk_delete) == true)
+{
+  array_resize(self.results, 0);
+}
+
+
+// SPRITE EXAMPLE.
+if (keyboard_check_pressed(ord("1")) == true)
 {
   // Clear the results.
   array_resize(self.results, 0);
@@ -35,3 +43,25 @@ if (keyboard_check_pressed(vk_space) == true)
   // The results are given as array too, so callbacks are not needed.
   var _results = self.bboxes.Submit();
 }
+
+
+// SURFACE EXAMPLE.
+if (keyboard_check_pressed(ord("2")) == true)
+&& (surface_exists(self.surface) == true)
+{
+  // Clear the results.
+  array_resize(self.results, 0);
+  
+  // Add example surface.
+  self.bboxes.AddSurface(self.surface, function(_request)
+  {
+    array_push(self.results, _request);
+  });
+  
+  // Execute the BBoxes.
+  // The results are given as array too, so callbacks are not needed.
+  var _results = self.bboxes.Submit();
+}
+
+
+
