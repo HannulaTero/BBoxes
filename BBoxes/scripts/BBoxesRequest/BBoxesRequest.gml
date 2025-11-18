@@ -12,19 +12,18 @@ function BBoxesRequest() : BBoxesCommon() constructor
   self.status = BBoxesRequestStatus.PENDING;
   
   
-  // Request index.
-  self.index = -1;
-  
-  
-  // Morton code, Z-curve index and position.
+  // Morton code, Z-curve positions.
   // This is based on size-sorted index.
-  self.mortonZ = -1; // The Z-curve index.
   self.mortonX = -1; // Grid 2D x-position.
   self.mortonY = -1; // Grid 2D y-position.
   
   
   // The Power of Two-size, and also the sorting key.
   self.size = -1;
+  
+  
+  // How transparent pixel is allowed to take part on bbox.
+  self.threshold = 1.0 / 255.0;
   
   
   // Function to be called when request is done.
@@ -89,6 +88,16 @@ function BBoxesRequest() : BBoxesCommon() constructor
   
   
   /**
+  * Return whether current request is valid.
+  */
+  static IsValid = function()
+  {
+    return false;
+  };
+  
+  
+  
+  /**
   * Assign the callback, which is called when request finishes / fails.
   * The function signature should be same as DefaultCallback.
   * 
@@ -97,6 +106,33 @@ function BBoxesRequest() : BBoxesCommon() constructor
   static SetCallback = function(_callback)
   {
     self.Callback = _callback;
+    return self;
+  };
+  
+  
+  
+  /**
+  * Threshold on which pixels should be accounted towards bbox solving.
+  * 
+  * @param {Real} _threshold
+  */ 
+  static SetThreshold = function(_threshold=1.0/255.0)
+  {
+    self.threshold = _threshold;
+    return self;
+  };
+  
+  
+  
+  /**
+  * Fails the request.
+  *
+  * @ignore
+  */ 
+  static SetFailed = function()
+  {
+    self.status = BBoxesRequestStatus.FAILURE;
+    self.size = -1;
     return self;
   };
 }

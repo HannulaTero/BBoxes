@@ -37,11 +37,21 @@ function BBoxesRequestImage(_label=undefined) : BBoxesRequest() constructor
   */
   static Draw = function(_x, _y)
   {
-    var _spr = self.data;
+    var _spr = self.sprite;
     var _w = sprite_get_width(_spr);
     var _h = sprite_get_height(_spr);
-    draw_sprite_stretched(_spr, self.meta, _x, _y, _w, _h);
+    draw_sprite_stretched(_spr, self.image, _x, _y, _w, _h);
     return self;
+  };
+  
+  
+  
+  /**
+  * Return whether current request is valid.
+  */
+  static IsValid = function()
+  {
+    return sprite_exists(self.sprite);
   };
   
   

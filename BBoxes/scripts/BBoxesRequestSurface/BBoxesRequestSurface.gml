@@ -33,6 +33,16 @@ function BBoxesRequestSurface(_label=undefined) : BBoxesRequest() constructor
   
   
   /**
+  * Return whether current request is valid.
+  */
+  static IsValid = function()
+  {
+    return surface_exists(self.surface);
+  };
+  
+  
+  
+  /**
   * Assigns the surface, and updates the PoT -size.
   * 
   * @param {Id.Surface} _surface
@@ -40,7 +50,7 @@ function BBoxesRequestSurface(_label=undefined) : BBoxesRequest() constructor
   static SetSurface = function(_surface)
   {
     // Sanity check.
-    if (surface_exists(_surface == false))
+    if (surface_exists(_surface) == false)
     {
       show_debug_message($"[{self}] Surface '{_surface}' doesn't exist.");
       return self;
