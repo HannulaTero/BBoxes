@@ -341,7 +341,7 @@ function BBoxes( _label=undefined) constructor
         surface_reset_target();
         
         // The size has been reduced.
-        _tailSize >>= 1;
+        _tailSize = _tailSize >> 1;
         
         // Swap the surface.
         _surfTmp = _surfDst;

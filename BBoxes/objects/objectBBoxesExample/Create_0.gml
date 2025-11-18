@@ -1,3 +1,5 @@
 /// @desc INITIALIZE
 
-bboxes = new BBoxes("BBoxes Example");
+show_debug_overlay(true, true);
+
+self.bboxes = new BBoxes("BBoxes Example");

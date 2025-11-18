@@ -1,5 +1,5 @@
 // Header.
-precision float highp;
+precision highp float;
 
 // Varyings.
 varying vec2 vCoord;
