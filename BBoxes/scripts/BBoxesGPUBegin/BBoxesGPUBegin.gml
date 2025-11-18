@@ -3,7 +3,7 @@
 /**
 * Set the GPU state.
 */ 
-function BBoxGPUBegin()
+function BBoxesGPUBegin()
 {
   // Create the state.
   static gpuState = method_call(function() 

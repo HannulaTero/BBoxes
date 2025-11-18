@@ -4,7 +4,7 @@
 * 
 * @param {Real} _index
 */ 
-function BBoxZDecodeY(_index)
+function BBoxesZDecodeY(_index)
 {
-  return BBoxZDecodeX(_index >> 1);
+  return BBoxesZDecodeX(_index >> 1);
 }

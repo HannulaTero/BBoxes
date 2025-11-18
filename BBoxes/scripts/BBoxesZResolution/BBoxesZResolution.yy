@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"BBoxBitLength",
+  "%Name":"BBoxesZResolution",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"BBoxBitLength",
+  "name":"BBoxesZResolution",
   "parent":{
     "name":"Utility",
     "path":"folders/BBoxes/Utility.yy",

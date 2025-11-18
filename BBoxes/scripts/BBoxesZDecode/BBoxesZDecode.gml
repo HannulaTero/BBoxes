@@ -4,10 +4,10 @@
 * 
 * @param {Real} _index
 */ 
-function BBoxZDecode(_index)
+function BBoxesZDecode(_index)
 {
   return [
-    BBoxZDecodeX(_index),
-    BBoxZDecodeY(_index)
+    BBoxesZDecodeX(_index),
+    BBoxesZDecodeY(_index)
   ];
 }

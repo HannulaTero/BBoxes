@@ -5,7 +5,7 @@
 * @param {Real} _x
 * @param {Real} _t
 */ 
-function BBoxZEncode(_x, _y)
+function BBoxesZEncode(_x, _y)
 {
   static functor = function(_pos)
   {

@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"BBoxGPUBegin",
+  "%Name":"BBoxesNextPoT",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"BBoxGPUBegin",
+  "name":"BBoxesNextPoT",
   "parent":{
     "name":"Utility",
     "path":"folders/BBoxes/Utility.yy",

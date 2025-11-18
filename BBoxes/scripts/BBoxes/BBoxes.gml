@@ -41,7 +41,7 @@ function BBoxes( _label=undefined) constructor
     {
       return self.AddSurface(_data, _Callback);
     }
-    return self.AddInvalid(_data, _Callback);
+    return self.AddInvalid(_Callback);
   };
   
   
@@ -156,7 +156,7 @@ function BBoxes( _label=undefined) constructor
     {
       return undefined;
     }
-    BBoxGPUBegin();
+    BBoxesGPUBegin();
     
     
     // Check for evaporated surfaces.
@@ -224,9 +224,9 @@ function BBoxes( _label=undefined) constructor
     array_foreach(_requests, function(_request, _index)
     {
       _request.mortonZ = _index;
-      _request.mortonX = BBoxZDecodeX(_index);
-      _request.mortonY = BBoxZDecodeY(_index);
-      _request.mortonRes = BBoxZResolution(_index);
+      _request.mortonX = BBoxesZDecodeX(_index);
+      _request.mortonY = BBoxesZDecodeY(_index);
+      _request.mortonRes = BBoxesZResolution(_index);
     });
     
     
@@ -283,7 +283,7 @@ function BBoxes( _label=undefined) constructor
           var _size = _request.size;
           var _x = _request.mortonX * _size;
           var _y = _request.mortonY * _size;
-          draw_sprite_stretched(spriteBBox1x1, 0, _x, _y, _size, _size);
+          draw_sprite_stretched(spriteBBoxes1x1, 0, _x, _y, _size, _size);
         }
       }
       surface_reset_target();
@@ -356,7 +356,7 @@ function BBoxes( _label=undefined) constructor
     
     // Copy final items to a smaller surface for the readback.
     // Z-curve has specific area, which needs to be accomodated. 
-    var _finalRes = BBoxZResolution(_requestCount);
+    var _finalRes = BBoxesZResolution(_requestCount);
     var _surfReadback = surface_create(_finalRes, _finalRes, _format);
     surface_set_target(_surfReadback);
     draw_surface_part(_surfSrc, 0, 0, _finalRes, _finalRes, 0, 0);
@@ -388,7 +388,7 @@ function BBoxes( _label=undefined) constructor
       // Get the actual request index.
       var _x = i mod _finalRes;
       var _y = i mod _finalRes;
-      var _index = BBoxZEncode(_x, _y);
+      var _index = BBoxesZEncode(_x, _y);
       
       // Set the result.
       var _request = _requests[i];
@@ -426,7 +426,7 @@ function BBoxes( _label=undefined) constructor
     
     // Finalize.
     self.Clear();
-    BBoxGPUEnd();
+    BBoxesGPUEnd();
     return _result;
   };
   

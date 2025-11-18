@@ -18,8 +18,8 @@ function BBoxesRequestImage(_spr, _img=0, _Callback=undefined) : BBoxesRequest(_
   var _w = sprite_get_width(_spr);
   var _h = sprite_get_height(_spr);
   self.size = max(
-    BBoxNextPoT(_w), 
-    BBoxNextPoT(_h)
+    BBoxesNextPoT(_w), 
+    BBoxesNextPoT(_h)
   ); 
   
   

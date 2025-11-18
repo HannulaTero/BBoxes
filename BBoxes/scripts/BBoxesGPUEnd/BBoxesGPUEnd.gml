@@ -3,7 +3,7 @@
 /**
 * Return the GPU state.
 */ 
-function BBoxGPUEnd()
+function BBoxesGPUEnd()
 {
   gpu_pop_state();
 }

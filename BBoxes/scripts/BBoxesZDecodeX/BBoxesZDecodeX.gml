@@ -4,7 +4,7 @@
 * 
 * @param {Real} _index
 */ 
-function BBoxZDecodeX(_index)
+function BBoxesZDecodeX(_index)
 {
   var _pos = _index & 0x55555555;
   _pos = (_pos ^ (_pos >> 1)) & 0x33333333;

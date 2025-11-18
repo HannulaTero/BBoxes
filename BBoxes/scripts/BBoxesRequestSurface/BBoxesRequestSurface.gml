@@ -12,8 +12,8 @@ function BBoxesRequestSurface(_surface, _Callback=undefined) : BBoxesRequest(_su
   var _w = surface_get_width(_surface);
   var _h = surface_get_height(_surface);
   self.size = max(
-    BBoxNextPoT(_w), 
-    BBoxNextPoT(_h)
+    BBoxesNextPoT(_w), 
+    BBoxesNextPoT(_h)
   );
   
   

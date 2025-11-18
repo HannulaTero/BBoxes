@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"BBoxZDecodeX",
+  "%Name":"BBoxesZEncode",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"BBoxZDecodeX",
+  "name":"BBoxesZEncode",
   "parent":{
     "name":"Utility",
     "path":"folders/BBoxes/Utility.yy",

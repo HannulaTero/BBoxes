@@ -5,7 +5,7 @@
 *
 * @param {Real} _value
 */ 
-function BBoxNextPoT(_value)
+function BBoxesNextPoT(_value)
 {
   return power(2, ceil(log2(_value))); 
 }

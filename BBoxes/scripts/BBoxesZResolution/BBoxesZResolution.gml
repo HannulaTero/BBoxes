@@ -4,7 +4,7 @@
 * 
 * @param {Real} _index
 */ 
-function BBoxZResolution(_index)
+function BBoxesZResolution(_index)
 {
   // Sanity check.
   if (_index <= 0) 
@@ -13,7 +13,7 @@ function BBoxZResolution(_index)
   }
   
   // Take most significant bit, position of highest 1bit.
-  var _highest = BBoxBitLength(_index) - 1;
+  var _highest = BBoxesBitLength(_index) - 1;
   
   // XY area interleaved, remove other.
   var _length = (_highest >> 1);
