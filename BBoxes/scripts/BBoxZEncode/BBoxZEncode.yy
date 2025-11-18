@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"BBoxZEncode",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"BBoxZEncode",
+  "parent":{
+    "name":"Utility",
+    "path":"folders/BBoxes/Utility.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"BBoxesRequestSurface",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"BBoxesRequestSurface",
+  "parent":{
+    "name":"BBoxes",
+    "path":"BBoxes.yyp",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

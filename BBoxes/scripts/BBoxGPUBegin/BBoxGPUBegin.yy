@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"BBoxGPUBegin",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"BBoxGPUBegin",
+  "parent":{
+    "name":"Utility",
+    "path":"folders/BBoxes/Utility.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

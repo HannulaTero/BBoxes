@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"BBoxesRequest",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"BBoxesRequest",
+  "parent":{
+    "name":"Requests",
+    "path":"folders/BBoxes/Requests.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

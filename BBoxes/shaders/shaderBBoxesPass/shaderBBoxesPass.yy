@@ -1,0 +1,12 @@
+{
+  "$GMShader":"",
+  "%Name":"shaderBBoxesPass",
+  "name":"shaderBBoxesPass",
+  "parent":{
+    "name":"BBoxes",
+    "path":"folders/BBoxes.yy",
+  },
+  "resourceType":"GMShader",
+  "resourceVersion":"2.0",
+  "type":1,
+}
