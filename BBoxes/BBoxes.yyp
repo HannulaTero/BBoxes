@@ -46,6 +46,7 @@
     {"id":{"name":"shaderBBoxesPass","path":"shaders/shaderBBoxesPass/shaderBBoxesPass.yy",},},
     {"id":{"name":"spriteBBoxes1x1","path":"sprites/spriteBBoxes1x1/spriteBBoxes1x1.yy",},},
     {"id":{"name":"spriteBBoxesExample190x160","path":"sprites/spriteBBoxesExample190x160/spriteBBoxesExample190x160.yy",},},
+    {"id":{"name":"spriteBBoxesExample640x640","path":"sprites/spriteBBoxesExample640x640/spriteBBoxesExample640x640.yy",},},
     {"id":{"name":"spriteBBoxesExample64x64","path":"sprites/spriteBBoxesExample64x64/spriteBBoxesExample64x64.yy",},},
   ],
   "resourceType":"GMProject",

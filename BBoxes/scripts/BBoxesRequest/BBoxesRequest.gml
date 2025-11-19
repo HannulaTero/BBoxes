@@ -12,12 +12,6 @@ function BBoxesRequest() : BBoxesCommon() constructor
   self.status = BBoxesRequestStatus.PENDING;
   
   
-  // Morton code, Z-curve positions.
-  // This is based on size-sorted index.
-  self.mortonX = -1; // Grid 2D x-position.
-  self.mortonY = -1; // Grid 2D y-position.
-  
-  
   // The Power of Two-size, and also the sorting key.
   self.size = -1;
   
@@ -30,7 +24,7 @@ function BBoxesRequest() : BBoxesCommon() constructor
   self.Callback = undefined;
   
   
-  // The origin, in sprite offset for example.
+  // The origin, like in sprite offset for example.
   self.xorigin = 0;
   self.yorigin = 0;
   
@@ -40,6 +34,16 @@ function BBoxesRequest() : BBoxesCommon() constructor
   self.ymin = -1;
   self.xmax = -1;
   self.ymax = -1;
+  
+  
+  // Morton code, Z-curves X-positions. This is based on size-sorted index.
+  // @ignore 
+  self.mortonX = -1; 
+  
+  
+  // Morton code, Z-curves Y-position. This is based on size-sorted index.
+  // @ignore 
+  self.mortonY = -1; 
   
   
   

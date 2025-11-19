@@ -42,12 +42,11 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
   * @param {Real}           _img
   * @param {Function}       _Callback
   */
-  static AddImage = function(_spr, _img, _Callback)
+  static AddImage = function(_spr, _img, _Callback=undefined)
   {
     var _request = new BBoxesRequestImage();
     _request.SetSprite(_spr, _img);
     _request.SetCallback(_Callback);
-    _request.SetOffset();
     array_push(self.requests, _request);
     return _request;
   };
@@ -61,7 +60,7 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
   * @param {Id.Surface} _surface
   * @param {Function}   _Callback
   */
-  static AddSurface = function(_surface, _Callback)
+  static AddSurface = function(_surface, _Callback=undefined)
   {
     var _request = new BBoxesRequestSurface();
     _request.SetSurface(_surface);
@@ -386,7 +385,7 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
     });
     
     
-    // Finalize, detach current array, and give to user.
+    // Finalize, detach current array, and give it to the user.
     BBoxesGPUEnd();
     self.requests = [ ];
     return _requests;
