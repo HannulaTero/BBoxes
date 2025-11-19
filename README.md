@@ -1,9 +1,9 @@
 # BBoxes
-## [GameMaker] Asset for finding 2D bounding boxes by utilizing power of GPU.
 ---
-_GameMaker version v2024.14.1.210, Runtime v2024.14.1.256_
+### [GameMaker] Asset for finding 2D bounding boxes by utilizing power of GPU.
 ---
-
+#### _GameMaker version v2024.14.1.210, Runtime v2024.14.1.256_
+---
 **Introduction**
 
 With this asset you can find bounding box of a surfaces, sprites or text by utilizing power of you graphics card. You can compute bbox for items at the same time, so only single GPU-to-CPU readback is done for all requests. 
