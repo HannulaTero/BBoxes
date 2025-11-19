@@ -22,7 +22,7 @@ void main()
   if (sample.a > FSH_threshold)
   {
     vec2 position = floor(gl_FragCoord.xy) - FSH_offset;
-    gl_FragColor = position.xyxy;
+    gl_FragColor = vec4(position, position + 1.0);
     return;
   }
   

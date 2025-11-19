@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"BBoxesCommon",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"BBoxesCommon",
+  "parent":{
+    "name":"BBoxes",
+    "path":"folders/BBoxes.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

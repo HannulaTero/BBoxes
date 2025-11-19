@@ -1,12 +1,12 @@
 {
   "$GMScript":"v1",
-  "%Name":"BBoxesBitLength",
+  "%Name":"BBoxesRequestStatus",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"BBoxesBitLength",
+  "name":"BBoxesRequestStatus",
   "parent":{
-    "name":"Utility",
-    "path":"folders/BBoxes/Utility.yy",
+    "name":"BBoxes",
+    "path":"folders/BBoxes.yy",
   },
   "resourceType":"GMScript",
   "resourceVersion":"2.0",

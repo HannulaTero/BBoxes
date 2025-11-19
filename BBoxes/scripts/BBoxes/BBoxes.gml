@@ -9,12 +9,11 @@
 * -> Collects requests as references, the situation is taken at "Submit".
 * -> So mind this when checking bbox for surfaces, which may change.
 * 
-* @param {String} _label    For identifying the BBox.
+* @param {String} _label For identifying purposes.
 */
-function BBoxes( _label=undefined) constructor
+function BBoxes( _label=undefined) : BBoxesCommon() constructor
 {
-  // Used for identification purposes.
-  self.label = undefined;
+  // Define the label.
   self.SetLabel(_label);
   
   
@@ -24,56 +23,32 @@ function BBoxes( _label=undefined) constructor
   
   
   /**
-  * Add new item as pending request.
-  * This tries to resolve what type automatically is.
+  * Add separately created BBoxRequest as pending request.
   *
-  * @param {Any} _data
-  * @param {Any} _meta
-  * @param {Function} _Callback
+  * @param {Struct.BBoxesRequest} _request Any of acceptable request types.
   */ 
-  static Add = function(_data, _meta=undefined, _Callback=undefined)
+  static Add = function(_request)
   {
-    if (sprite_exists(_data) == true)
-    {
-      return self.AddImage(_data, _meta, _Callback);
-    }
-    if (surface_exists(_data) == true)
-    {
-      return self.AddSurface(_data, _Callback);
-    }
-    return self.AddInvalid(_Callback);
+    array_push(self.requests, _request);
+    return _request;
   };
   
   
   
   /**
   * Add sprite-image as pending request.
-  * I think this is more useful if you have created sprite from surface etc.
-  * as you could derive the bbox information from sprite size and sprite_get_uvs.
-  * But maybe your sprite trimming options is "bad" for doing that.
   * 
   * @param {Asset.GMSprite} _spr
   * @param {Real}           _img
   * @param {Function}       _Callback
   */
-  static AddImage = function(_spr, _img=0, _Callback=undefined)
+  static AddImage = function(_spr, _img, _Callback=undefined)
   {
-    array_push(self.requests, new BBoxesRequestImage(_spr, _img, _Callback));
-    return self;
-  };
-  
-  
-  
-  /**
-  * Add invalid request.
-  * This is done, so indexing stays correct.
-  * 
-  * @param {Function} _Callback
-  */
-  static AddInvalid = function(_Callback=undefined)
-  {
-    array_push(self.requests, new BBoxesRequestInvalid(_Callback));
-    return self;
+    var _request = new BBoxesRequestImage();
+    _request.SetSprite(_spr, _img);
+    _request.SetCallback(_Callback);
+    array_push(self.requests, _request);
+    return _request;
   };
   
   
@@ -87,8 +62,28 @@ function BBoxes( _label=undefined) constructor
   */
   static AddSurface = function(_surface, _Callback=undefined)
   {
-    array_push(self.requests, new BBoxesRequestSurface(_surface, _Callback));
-    return self;
+    var _request = new BBoxesRequestSurface();
+    _request.SetSurface(_surface);
+    _request.SetCallback(_Callback);
+    array_push(self.requests, _request);
+    return _request;
+  };
+  
+  
+  
+  /**
+  * Add text as pending request.
+  * 
+  * @param {String}   _text
+  * @param {Function} _Callback
+  */
+  static AddText = function(_text, _Callback=undefined)
+  {
+    var _request = new BBoxesRequestText();
+    _request.SetText(_text);
+    _request.SetCallback(_Callback);
+    array_push(self.requests, _request);
+    return _request;
   };
   
   
@@ -105,84 +100,53 @@ function BBoxes( _label=undefined) constructor
   
   
   /**
-  * Creates a new label.
-  * 
-  * @param {String} _label
-  */
-  static CreateLabel = function()
-  {
-    static counter = 0;
-    return $"{instanceof(self)}.{counter++}";
-  };
-  
-  
-  
-  /**
-  * Get current label.
-  */
-  static GetLabel = function()
-  {
-    return self.label;
-  };
-  
-  
-  
-  /**
-  * 
-  * @param {String} _label
-  */
-  static SetLabel = function(_label=self.CreateLabel())
-  {
-    self.label = _label;
-    return self;
-  };
-  
-  
-  
-  /**
   * Submits current requests.
   * Has to be called in Draw-event!
   * -> Uses shaders, and alters active shader.
   * -> Alters GPU state, but tries return it back to normal.
   *
-  * @returns {Array<Array<Real>>}
+  * @returns {Array<Struct.BBoxesRequest>}
   */
   static Submit = function()
   {
-    // Preparations.
+    // Caching uniform handles..
+    static Init_FSH_threshold  = shader_get_uniform(shaderBBoxesInit, "FSH_threshold");
+    static Init_FSH_offset     = shader_get_uniform(shaderBBoxesInit, "FSH_offset");
+    static Pass_FSH_baseTexels = shader_get_uniform(shaderBBoxesPass, "FSH_baseTexels");
+    
+    
+    // Whether there are any pending requests..
     var _requests = self.requests;
     var _requestCount = array_length(_requests);
     if (_requestCount == 0)
     {
       return undefined;
     }
+    
+    
+    // Set up GPU state suitable for our needs.
     BBoxesGPUBegin();
     
     
-    // Check for evaporated surfaces.
+    // Check all requests whether they are valid or not.
+    // -> For example this checks whether input surfaces exists.
     array_foreach(_requests, function(_request, _index)
     {
-      if (is_instanceof(_request, BBoxesRequestSurface))
-      && (surface_exists(_request.data) == false)
+      if (_request.IsValid() == false)
       {
-        _request.status = "failed";
-        _request.size = -1;
+        _request.SetFailed();
       }
     });
     
     
-    // Find out whether require rgba32float -format.
+    // Find out whether any of current requests require rgba32float -format.
     // -> rgba16float can handle sizes up to 2048.
-    var _format = surface_rgba16float;
+    var _higherUsed = false;
     var _higherRequired = false;
-    for(var i = 0; i < _requestCount; i++)
+    if (array_any(_requests, function(_request, _index) { return (_request.size > 2048); }))
     {
-      if (_requests[i].size > 2048)
-      {
-        _format = surface_rgba32float;
-        _higherRequired = true;
-        break;
-      }
+      _higherUsed = true;
+      _higherRequired = true;
     }
     
     
@@ -191,24 +155,34 @@ function BBoxes( _label=undefined) constructor
     if (_higherRequired == true)
     && (surface_format_is_supported(surface_rgba32float) == false)
     {
-      _format = surface_rgba16float;
+      _higherUsed = false;
       array_foreach(_requests, function(_request, _index)
       {
         if (_request.size > 2048)
         {
-          _request.status = "failed";
-          _request.size = -1;
+          _request.SetFailed();
         }
       });
     }
     
     
-    // Give indexes for the requests.
-    // We are sorting these, so index can be used to get original order back.
-    array_foreach(_requests, function(_request, _index)
+    // Get used surface format, and its corresponsing buffer datatype, datasize, and stride (jump from next item).
+    // -> In HTML5, reading size of buffer_f16 is bugged for non-compile-time use. (fixed in 2025.14.2)
+    var _format, _dtype, _dsize, _stride;
+    if (_higherUsed == true)
     {
-      _request.index = _index;
-    });
+      _format = surface_rgba32float;
+      _dtype = buffer_f32;
+      _dsize = buffer_sizeof(buffer_f32);
+      _stride = _dsize * 4; // 4 pixels.
+    }
+    else
+    {
+      _format = surface_rgba16float;
+      _dtype = buffer_f16;
+      _dsize = buffer_sizeof(buffer_f16);
+      _stride = _dsize * 4; // 4 pixels.
+    }
     
     
     // Sort the requests from largest to smallest.
@@ -219,65 +193,71 @@ function BBoxes( _label=undefined) constructor
     });
     
     
-    // Precalculate Z-curve positions an indexes for the requests.
+    // Precalculate Z-curve positions for the requests.
     // We will have to calculate these couple of times otherwise, so caching is good.
     array_foreach(_requests, function(_request, _index)
     {
-      _request.mortonZ = _index;
       _request.mortonX = BBoxesZDecodeX(_index);
       _request.mortonY = BBoxesZDecodeY(_index);
     });
     
     
-    // Precompute the largest surface size required.
-    // The sources are added and surface shrunk alternatvely, so can't directly know.
+    // Precompute the largest surface size required for all passes.
+    // The sources are added and surface shrunk alternatvely, so can't directly calculated.
     // The item inserting follows Z-curve (morton code).
-    var _maxW = 1;
-    var _maxH = 1;
+    var _surfaceW = 1;
+    var _surfaceH = 1;
     for(var i = 0; i < _requestCount; i++)
     {
       var _request = _requests[i];
-      _maxW = max(_maxW, (_request.mortonX + 1) * _request.size);
-      _maxH = max(_maxH, (_request.mortonY + 1) * _request.size);
+      _surfaceW = max(_surfaceW, (_request.mortonX + 1) * _request.size);
+      _surfaceH = max(_surfaceH, (_request.mortonY + 1) * _request.size);
     }
-    _maxW = BBoxesNextPoT(_maxW);
-    _maxH = BBoxesNextPoT(_maxH);
     
     
     // Prepare the surfaces.
     // Surfaces are being cleared while items are inserted.
-    var _surfSrc = surface_create(_maxW, _maxH, _format);
-    var _surfDst = surface_create(_maxW, _maxH, _format);
+    // Because items adding and reduction is interleaved, the destination is not just half of source.
+    // -> Of course one could calculate beforehand smallest size both surfaces needs to have based on alternations.
+    var _surfSrc = surface_create(_surfaceW, _surfaceH, _format);
+    var _surfDst = surface_create(_surfaceW, _surfaceH, _format);
     var _surfTmp = undefined;
     
     
     // Start with the biggest requests and go down, include smaller requests on the way.
-    // 1) Find how many following items share same PoT-size.
-    // 2) Clear surface under their target positions.
-    // 3) Push their "seed" values, initial mixmax-values.
-    // 4) Apply reduce pass, where 2x2 area is shrunk into 1x1.
-    // 5) Repeat until no more requests are there, all requests are shrunk into 1x1.
-    var _head = 0;
+    //  1) Find how many following items share same PoT-size.
+    //  2) Clear surface under their target positions.
+    //  3) Push their "seed" values, initial minmax-values.
+    //  4) Apply reduce pass, where 2x2 areas are shrunk into 1x1 areas.
+    //  5) Repeat until no more requests are there, all requests are shrunk into 1x1.
+    // This is creating a morton code / Z-curve. Reduction keeps "fractal structure".
     var _tail = 0;
+    var _head = 0;
+    var _mortonW = 0;
+    var _mortonH = 0;
     while(_tail < _requestCount)
     {
-      // The size of current pass.
+      // The PoT -size of current pass.
       var _tailSize = _requests[_tail].size;
+      var _headSize = 1;
+      
       
       // Find the range how many requests belong to the pass.
+      // Also find how large next one should be.
       _head = _tail + 1;
       while(_head < _requestCount)
       {
         if (_requests[_head].size != _tailSize)
         {
+          _headSize = _requests[_head].size; 
           break;
         }
         _head++;
       }
       
+      
       // Clean the source for the requests.
-      // Because request might be smaller than PoT, 
-      // also we are reusing surfaces.
+      // Because request might be smaller than PoT, also we are reusing surfaces.
       surface_set_target(_surfSrc);
       {
         shader_set(shaderBBoxesClear);
@@ -293,37 +273,22 @@ function BBoxes( _label=undefined) constructor
       }
       surface_reset_target();
       
+      
       // Push requests into source.
-      // This updates minmax-positions for each pixel.
+      // The the seed-values for minmax is calculated from output position, so offset is required.
+      // Also calculate the maximum size for the reduction pass.
       surface_set_target(_surfSrc);
       {
-        // Preparations.
-        var _shader = shaderBBoxesInit;
-        var _FSH_threshold = shader_get_uniform(_shader, "FSH_threshold");
-        var _FSH_offset = shader_get_uniform(_shader, "FSH_offset");
-        _maxW = 1;
-        _maxH = 1;
-        
-        // Apply the shader.
-        // The minmax is calculated from output position, so offset is required.
-        shader_set(_shader);
-        shader_set_uniform_f(_FSH_threshold, 1.0 / 255.0);
+        shader_set(shaderBBoxesInit);
         for(var i = _tail; i < _head; i++)
         {
           var _request = _requests[i];
-          
-          // Get the position.
-          var _x = _request.mortonX * _request.size;
-          var _y = _request.mortonY * _request.size;
-          
-          // Get the size.
-          _maxW = max(_maxW, _x + _request.size);
-          _maxH = max(_maxH, _y + _request.size);
-          
-          // Whether try drawing at all.
-          if (_request.status != "failed")
+          if (_request.status != BBoxesRequestStatus.FAILURE)
           {
-            shader_set_uniform_f(_FSH_offset, _x, _y);
+            var _x = _request.mortonX * _request.size;
+            var _y = _request.mortonY * _request.size;
+            shader_set_uniform_f(Init_FSH_threshold, _request.threshold);
+            shader_set_uniform_f(Init_FSH_offset, _x, _y);
             _request.Draw(_x, _y);
           }
         }
@@ -331,33 +296,38 @@ function BBoxes( _label=undefined) constructor
       }
       surface_reset_target();
       
+      
+      // Get the maximum seen Z-curve position. 
+      // This determines how large area atleast needs to be updated.
+      for(var i = _tail; i < _head; i++)
+      {
+        var _request = _requests[i];
+        _mortonW = max(_mortonW, _request.mortonX + 1);
+        _mortonH = max(_mortonH, _request.mortonY + 1);
+      }
+      
+      
       // Reduce the source by 2x2 blocks.
       // This is repeated as many times until meet next request size.
-      var _headSize = (_head < _requestCount) ? (_requests[_head].size) : 1;
       while(_tailSize > _headSize)
       {
-        // Do the reduction steps.
         surface_set_target(_surfDst);
         {
           // Preparations.
-          var _shader = shaderBBoxesPass;
-          var _FSH_baseTexels = shader_get_uniform(_shader, "FSH_baseTexels");
           var _texture = surface_get_texture(_surfSrc);
           var _texelW = texture_get_texel_width(_texture);
           var _texelH = texture_get_texel_height(_texture);
-          _maxW = _maxW >> 1;
-          _maxH = _maxH >> 1;
+          _tailSize = (_tailSize >> 1);
+          _surfaceW = (_mortonW * _tailSize);
+          _surfaceH = (_mortonH * _tailSize);
         
           // Apply the shader.
-          shader_set(_shader);
-          shader_set_uniform_f(_FSH_baseTexels, _texelW, _texelH);
-          draw_surface_stretched(_surfSrc, 0, 0, _maxW, _maxH);
+          shader_set(shaderBBoxesPass);
+          shader_set_uniform_f(Pass_FSH_baseTexels, _texelW, _texelH);
+          draw_surface_stretched(_surfSrc, 0, 0, _surfaceW, _surfaceH);
           shader_reset();
         }
         surface_reset_target();
-        
-        // The size has been reduced.
-        _tailSize = _tailSize >> 1;
         
         // Swap the surface.
         _surfTmp = _surfDst;
@@ -372,37 +342,23 @@ function BBoxes( _label=undefined) constructor
     
     // Copy final items to a smaller surface for the readback.
     // Z-curve has specific area, which needs to be accomodated. 
-    var _surfReadback = surface_create(_maxW, _maxH, _format);
+    var _surfReadback = surface_create(_mortonW, _mortonH, _format);
     surface_set_target(_surfReadback);
-    draw_surface_part(_surfSrc, 0, 0, _maxW, _maxH, 0, 0);
+    draw_surface_part(_surfSrc, 0, 0, _mortonW, _mortonH, 0, 0);
     surface_reset_target();
     surface_free(_surfSrc);
     surface_free(_surfDst);
     
     
-    // Get datatype and size.
-    // In HTML5, reading indirectly size of buffer_f16 is bugged.
-    // It works only if used directly 'buffer_sizeof(buffer_f16)' because of compile-time optimization.
-    var _dtype, _dsize;
-    if (_format == surface_rgba16float)
-    {
-      _dtype = buffer_f16;
-      _dsize = buffer_sizeof(buffer_f16);
-    }
-    else
-    {
-      _dtype = buffer_f32;
-      _dsize = buffer_sizeof(buffer_f32);
-    }
-    
     // Do the readback.
-    var _bytes = _dsize * 4 * _maxW * _maxH;
+    var _bytes = _stride * _mortonW * _mortonH;
     var _buffer = buffer_create(_bytes, buffer_grow, 1);
     buffer_get_surface(_buffer, _surfReadback, 0);
     surface_free(_surfReadback);
     
     
-    // The items are in linearized 2D positions, which again are in positions for Z-curve.
+    // The items are in linearized 2D positions, in row-major curve.
+    // 2D positions represent Z-curve index, current item order.
     // So have to change row-major index into Z-curve index.
     for(var i = 0; i < _requestCount; i++)
     {
@@ -412,34 +368,32 @@ function BBoxes( _label=undefined) constructor
       // Get the actual request index.
       var _x = BBoxesZDecodeX(i);
       var _y = BBoxesZDecodeY(i);
-      var _index = _x + _y * _maxW;
+      var _index = _x + _y * _surfaceW;
       
       // Read the result.
-      buffer_seek(_buffer, buffer_seek_start, _index * _dsize * 4);
+      buffer_seek(_buffer, buffer_seek_start, _index * _stride);
       var _xmin = buffer_read(_buffer, _dtype);
       var _ymin = buffer_read(_buffer, _dtype);
       var _xmax = buffer_read(_buffer, _dtype);
       var _ymax = buffer_read(_buffer, _dtype);
       
       // Set the result.
-      _request.xmin = _xmin;
-      _request.ymin = _ymin;
-      _request.xmax = _xmax;
-      _request.ymax = _ymax;
+      _request.SetBBox(_xmin, _ymin, _xmax, _ymax);
     }
     buffer_delete(_buffer);
     
     
-    // Return the original order.
-    array_sort(_requests, function(_lhs, _rhs)
-    {
-      return sign(_lhs.index - _rhs.index); 
-    });
-    
-    
+    // Change status to reflect success.
     // Do the callbacks, if the request has one.
     array_foreach(_requests, function(_request, index)
     {
+      // Don't change if failed beforehand.
+      if (_request.status == BBoxesRequestStatus.PENDING)
+      {
+        _request.status = BBoxesRequestStatus.SUCCESS;
+      }
+      
+      // Do the callback.
       if (_request.Callback != undefined)
       {
         _request.Callback(_request);
@@ -447,27 +401,10 @@ function BBoxes( _label=undefined) constructor
     });
     
     
-    // Get the results into array.
-    var _result = array_map(_requests, function(_request, _index)
-    {
-      return _request.GetBBox();
-    });
-    
-    
-    // Finalize.
-    self.Clear();
+    // Finalize, detach current array, and give it to the user.
     BBoxesGPUEnd();
-    return _result;
-  };
-  
-  
-  
-  /**
-  * When BBoxes is printed etc. just give the label.
-  */ 
-  static toString = function()
-  {
-    return self.GetLabel();
+    self.requests = [ ];
+    return _requests;
   };
 }
 
