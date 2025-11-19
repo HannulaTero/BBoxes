@@ -1,5 +1,4 @@
-# BBoxes
----
+# <img width="128" height="128" alt="icon-BBoxes" src="https://github.com/user-attachments/assets/eb88acd8-5004-412f-af87-95b74c0a1e5e" /> BBoxes 
 ### [GameMaker] Asset for finding 2D bounding boxes by utilizing power of GPU.
 ---
 #### _GameMaker version v2024.14.1.210, Runtime v2024.14.1.256_
