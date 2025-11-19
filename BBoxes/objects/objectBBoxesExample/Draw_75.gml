@@ -10,7 +10,7 @@ if (keyboard_check_pressed(vk_delete) == true)
 
 
 // SPRITE EXAMPLE.
-if (keyboard_check_pressed(ord("Q")) == true)
+if (keyboard_check(ord("Q")) == true)
 { 
   // Preparations.
   var _sprite; 
