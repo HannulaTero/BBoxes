@@ -72,6 +72,23 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
   
   
   /**
+  * Add text as pending request.
+  * 
+  * @param {String}   _text
+  * @param {Function} _Callback
+  */
+  static AddText = function(_text, _Callback=undefined)
+  {
+    var _request = new BBoxesRequestText();
+    _request.SetText(_text);
+    _request.SetCallback(_Callback);
+    array_push(self.requests, _request);
+    return _request;
+  };
+  
+  
+  
+  /**
   * Clears all current requests.
   */
   static Clear = function()
@@ -92,6 +109,12 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
   */
   static Submit = function()
   {
+    // Caching uniform handles..
+    static Init_FSH_threshold  = shader_get_uniform(shaderBBoxesInit, "FSH_threshold");
+    static Init_FSH_offset     = shader_get_uniform(shaderBBoxesInit, "FSH_offset");
+    static Pass_FSH_baseTexels = shader_get_uniform(shaderBBoxesPass, "FSH_baseTexels");
+    
+    
     // Whether there are any pending requests..
     var _requests = self.requests;
     var _requestCount = array_length(_requests);
@@ -179,8 +202,8 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
     });
     
     
-    // Precompute the largest surface size required.
-    // The sources are added and surface shrunk alternatvely, so can't directly know.
+    // Precompute the largest surface size required for all passes.
+    // The sources are added and surface shrunk alternatvely, so can't directly calculated.
     // The item inserting follows Z-curve (morton code).
     var _surfaceW = 1;
     var _surfaceH = 1;
@@ -190,31 +213,34 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
       _surfaceW = max(_surfaceW, (_request.mortonX + 1) * _request.size);
       _surfaceH = max(_surfaceH, (_request.mortonY + 1) * _request.size);
     }
-    _surfaceW = BBoxesNextPoT(_surfaceW);
-    _surfaceH = BBoxesNextPoT(_surfaceH);
     
     
     // Prepare the surfaces.
     // Surfaces are being cleared while items are inserted.
+    // Because items adding and reduction is interleaved, the destination is not just half of source.
+    // -> Of course one could calculate beforehand smallest size both surfaces needs to have based on alternations.
     var _surfSrc = surface_create(_surfaceW, _surfaceH, _format);
     var _surfDst = surface_create(_surfaceW, _surfaceH, _format);
     var _surfTmp = undefined;
     
     
     // Start with the biggest requests and go down, include smaller requests on the way.
-    // 1) Find how many following items share same PoT-size.
-    // 2) Clear surface under their target positions.
-    // 3) Push their "seed" values, initial mixmax-values.
-    // 4) Apply reduce pass, where 2x2 area is shrunk into 1x1.
-    // 5) Repeat until no more requests are there, all requests are shrunk into 1x1.
-    // This is creating Z-curve, and each reduction steps is like collapsing it one resolution down. 
+    //  1) Find how many following items share same PoT-size.
+    //  2) Clear surface under their target positions.
+    //  3) Push their "seed" values, initial minmax-values.
+    //  4) Apply reduce pass, where 2x2 areas are shrunk into 1x1 areas.
+    //  5) Repeat until no more requests are there, all requests are shrunk into 1x1.
+    // This is creating a morton code / Z-curve. Reduction keeps "fractal structure".
     var _tail = 0;
     var _head = 0;
+    var _mortonW = 0;
+    var _mortonH = 0;
     while(_tail < _requestCount)
     {
-      // The size of current pass.
+      // The PoT -size of current pass.
       var _tailSize = _requests[_tail].size;
       var _headSize = 1;
+      
       
       // Find the range how many requests belong to the pass.
       // Also find how large next one should be.
@@ -249,37 +275,20 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
       
       
       // Push requests into source.
-      // This updates minmax-positions for each pixel.
-      // Also calucalte the maximum size for the reduction pass.
+      // The the seed-values for minmax is calculated from output position, so offset is required.
+      // Also calculate the maximum size for the reduction pass.
       surface_set_target(_surfSrc);
       {
-        // Preparations.
-        var _shader = shaderBBoxesInit;
-        var _FSH_threshold = shader_get_uniform(_shader, "FSH_threshold");
-        var _FSH_offset = shader_get_uniform(_shader, "FSH_offset");
-        _surfaceW = 1;
-        _surfaceH = 1;
-        
-        // Apply the shader.
-        // The minmax is calculated from output position, so offset is required.
-        shader_set(_shader);
+        shader_set(shaderBBoxesInit);
         for(var i = _tail; i < _head; i++)
         {
           var _request = _requests[i];
-          
-          // Get the position.
-          var _x = _request.mortonX * _request.size;
-          var _y = _request.mortonY * _request.size;
-          
-          // Get the size.
-          _surfaceW = max(_surfaceW, _x + _request.size);
-          _surfaceH = max(_surfaceH, _y + _request.size);
-          
-          // Whether try drawing at all.
           if (_request.status != BBoxesRequestStatus.FAILURE)
           {
-            shader_set_uniform_f(_FSH_threshold, _request.threshold);
-            shader_set_uniform_f(_FSH_offset, _x, _y);
+            var _x = _request.mortonX * _request.size;
+            var _y = _request.mortonY * _request.size;
+            shader_set_uniform_f(Init_FSH_threshold, _request.threshold);
+            shader_set_uniform_f(Init_FSH_offset, _x, _y);
             _request.Draw(_x, _y);
           }
         }
@@ -288,32 +297,37 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
       surface_reset_target();
       
       
+      // Get the maximum seen Z-curve position. 
+      // This determines how large area atleast needs to be updated.
+      for(var i = _tail; i < _head; i++)
+      {
+        var _request = _requests[i];
+        _mortonW = max(_mortonW, _request.mortonX + 1);
+        _mortonH = max(_mortonH, _request.mortonY + 1);
+      }
+      
+      
       // Reduce the source by 2x2 blocks.
       // This is repeated as many times until meet next request size.
       while(_tailSize > _headSize)
       {
-        // Do the reduction steps.
         surface_set_target(_surfDst);
         {
           // Preparations.
-          var _shader = shaderBBoxesPass;
-          var _FSH_baseTexels = shader_get_uniform(_shader, "FSH_baseTexels");
           var _texture = surface_get_texture(_surfSrc);
           var _texelW = texture_get_texel_width(_texture);
           var _texelH = texture_get_texel_height(_texture);
-          _surfaceW = _surfaceW >> 1;
-          _surfaceH = _surfaceH >> 1;
+          _tailSize = (_tailSize >> 1);
+          _surfaceW = (_mortonW * _tailSize);
+          _surfaceH = (_mortonH * _tailSize);
         
           // Apply the shader.
-          shader_set(_shader);
-          shader_set_uniform_f(_FSH_baseTexels, _texelW, _texelH);
+          shader_set(shaderBBoxesPass);
+          shader_set_uniform_f(Pass_FSH_baseTexels, _texelW, _texelH);
           draw_surface_stretched(_surfSrc, 0, 0, _surfaceW, _surfaceH);
           shader_reset();
         }
         surface_reset_target();
-        
-        // The size has been reduced.
-        _tailSize = _tailSize >> 1;
         
         // Swap the surface.
         _surfTmp = _surfDst;
@@ -328,16 +342,16 @@ function BBoxes( _label=undefined) : BBoxesCommon() constructor
     
     // Copy final items to a smaller surface for the readback.
     // Z-curve has specific area, which needs to be accomodated. 
-    var _surfReadback = surface_create(_surfaceW, _surfaceH, _format);
+    var _surfReadback = surface_create(_mortonW, _mortonH, _format);
     surface_set_target(_surfReadback);
-    draw_surface_part(_surfSrc, 0, 0, _surfaceW, _surfaceH, 0, 0);
+    draw_surface_part(_surfSrc, 0, 0, _mortonW, _mortonH, 0, 0);
     surface_reset_target();
     surface_free(_surfSrc);
     surface_free(_surfDst);
     
     
     // Do the readback.
-    var _bytes = _stride * _surfaceW * _surfaceH;
+    var _bytes = _stride * _mortonW * _mortonH;
     var _buffer = buffer_create(_bytes, buffer_grow, 1);
     buffer_get_surface(_buffer, _surfReadback, 0);
     surface_free(_surfReadback);

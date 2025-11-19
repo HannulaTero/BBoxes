@@ -114,6 +114,7 @@ function BBoxesRequest() : BBoxesCommon() constructor
   * @param {Real} _ymin
   * @param {Real} _xmax
   * @param {Real} _ymax
+  * @ignore
   */ 
   static SetBBox = function(_xmin, _ymin, _xmax, _ymax)
   {

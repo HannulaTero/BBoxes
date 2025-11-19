@@ -5,14 +5,21 @@ var _count = array_length(self.results);
 self.index += mouse_wheel_down() - mouse_wheel_up();
 self.index = clamp(self.index, 0, _count - 1);
 
-// Draw infor.
+
+// Draw information.
 {
+  draw_set_font(ft_consolas);
+  draw_set_halign(fa_left);
+  draw_set_valign(fa_top);
   var _i = 0;
   var _h = 16;
   var _x = 64; 
   var _y = 128; 
   draw_text(_x, _y + _h * _i++, "Press [Q] to run Sprite example.");
   draw_text(_x, _y + _h * _i++, "Press [W] to run Surface example.");
+  draw_text(_x, _y + _h * _i++, "Press [E] to run Text example.");
+  draw_text(_x, _y + _h * _i++, "Press [R] to run Character example.");
+  draw_text(_x, _y + _h * _i++, "---");
   draw_text(_x, _y + _h * _i++, "Press [DELETE] to clear examples.");
   draw_text(_x, _y + _h * _i++, "Mouse [WHEEL] to change current result.");
   draw_text(_x, _y + _h * _i++, "Mouse [MIDDLE] for debugging Z-curve / Morton code.");
@@ -62,29 +69,43 @@ if (_count > 0)
 {
   var _request = self.results[self.index];
   
-  if (is_instanceof(_request, BBoxesRequestImage) == true)
+  switch(instanceof(_request))
   {
-    // Draw the sprite.
-    var _x = room_width * 0.5;
-    var _y = room_height * 0.5;
-    draw_sprite(_request.sprite, _request.image, _x, _y);
-
-    // Draw the bounding box. 
-    draw_rectangle(
-      _x + _request.xmin, _y + _request.ymin,
-      _x + _request.xmax, _y + _request.ymax,
-      true
-    );
-  }
-  
-  // Draw the surface bounding box. 
-  // Assume surface is being drawn already on (0,0)
-  if (is_instanceof(_request, BBoxesRequestSurface) == true)
-  {
-    draw_rectangle(
-      _request.xmin, _request.ymin,
-      _request.xmax, _request.ymax,
-      true
-    );
+    // Draw the sprite and bounding box. 
+    case "BBoxesRequestImage": {
+      var _x = room_width * 0.5;
+      var _y = room_height * 0.5;
+      draw_sprite(_request.sprite, _request.image, _x, _y);
+      DrawBBoxes(_x, _y,
+        _request.xmin, _request.ymin,
+        _request.xmax, _request.ymax
+      );
+      break;
+    }
+    
+    // Draw the surface bounding box. 
+    // Assume surface is being drawn already on (0,0)
+    case "BBoxesRequestSurface": {
+      DrawBBoxes(0, 0,
+        _request.xmin, _request.ymin,
+        _request.xmax, _request.ymax
+      );
+      break;
+    }
+    
+    // Draw the sprite and bounding box. 
+    case "BBoxesRequestText": {
+      var _x = room_width * 0.35;
+      var _y = room_height * 0.35;
+      draw_set_font(_request.font);
+      draw_set_halign(fa_left);
+      draw_set_valign(fa_top);
+      draw_text(_x, _y, _request.text);
+      DrawBBoxes(_x, _y,
+        _request.xmin, _request.ymin,
+        _request.xmax, _request.ymax
+      );
+      break;
+    }
   }
 }

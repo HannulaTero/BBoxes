@@ -5,6 +5,10 @@
 if (keyboard_check_pressed(vk_delete) == true)
 {
   array_resize(self.results, 0);
+  if (surface_exists(self.surface) == true)
+  {
+    surface_free(self.surface);
+  }
 }
 
 
@@ -61,6 +65,45 @@ if (keyboard_check_pressed(ord("W")) == true)
   // Execute the BBoxes.
   self.results = self.bboxes.Submit();
 }
+
+
+
+// TEXT EXAMPLE.
+if (keyboard_check_pressed(ord("E")) == true)
+{
+  // Add example text.
+  draw_set_font(ft_consolas);
+  repeat(16)
+  {
+    var _text = "";
+    repeat(64)
+    {
+      _text += choose("Hello", "World!", " ", "\n");
+    }
+    self.bboxes.AddText(_text);
+  }
+  
+  // Execute the BBoxes.
+  self.results = self.bboxes.Submit();
+}
+
+
+
+// CHARACTER EXAMPLE.
+if (keyboard_check_pressed(ord("R")) == true)
+{
+  // Add example characters.
+  draw_set_font(ft_consolas_large);
+  for(var i = 33; i < 127; i++)
+  {
+    self.bboxes.AddText(chr(i));
+  }
+  
+  // Execute the BBoxes.
+  self.results = self.bboxes.Submit();
+}
+
+
 
 
 

@@ -56,6 +56,29 @@ function BBoxesRequestImage(_label=undefined) : BBoxesRequest() constructor
   
   
   /**
+  * Set the bounding box, called from Submit.
+  * This will apply origin and trim-value.
+  *
+  * @param {Real} _xmin
+  * @param {Real} _ymin
+  * @param {Real} _xmax
+  * @param {Real} _ymax
+  * @ignore
+  */ 
+  static SetBBox = function(_xmin, _ymin, _xmax, _ymax)
+  {
+    static super = BBoxesRequest.SetBBox;
+    super(_xmin, _ymin, _xmax, _ymax);
+    self.xmin += self.uvs[4]
+    self.ymin += self.uvs[5]
+    self.xmax += self.uvs[4]
+    self.ymax += self.uvs[5]
+    return self;
+  };
+  
+  
+  
+  /**
   * Assigns the sprite and image, and updates the PoT -size.
   * 
   * @param {Asset.GMSprite} _sprite
